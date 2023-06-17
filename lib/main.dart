@@ -1,3 +1,4 @@
+import 'package:animation_with_flutter/animations/animated_chained_animation.dart';
 import 'package:flutter/material.dart';
 
 import 'animations/animated_builder.dart';
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const AnimatedBuilderTransform(),
+      home: const ChainedAnimationWithClipper(),
     );
   }
 }

@@ -27,16 +27,16 @@ class _ChainedAnimationWithClipperState
       duration: const Duration(seconds: 2),
     );
 
-    _flipAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    );
-
     _ccwAnimation =
         Tween<double>(begin: 0, end: -(pi / 2)).animate(CurvedAnimation(
       parent: _ccwAnimationController,
       curve: Curves.bounceOut,
     ));
+
+    _flipAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
 
     _flipAnimation = Tween<double>(begin: 0, end: pi).animate(CurvedAnimation(
       parent: _flipAnimationController,
@@ -46,7 +46,7 @@ class _ChainedAnimationWithClipperState
     _ccwAnimationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _flipAnimation = Tween<double>(
-          begin: _flipAnimationController.value,
+          begin: _flipAnimation.value,
           end: _flipAnimation.value + pi,
         ).animate(CurvedAnimation(
           parent: _flipAnimationController,
@@ -56,14 +56,15 @@ class _ChainedAnimationWithClipperState
         _flipAnimationController
           ..reset()
           ..forward();
+        print("ccw status is $status");
       }
     });
 
     _flipAnimation.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _ccwAnimation = Tween<double>(
-          begin: _ccwAnimationController.value,
-          end: _ccwAnimationController.value + -(pi / 2.0),
+          begin: _ccwAnimation.value,
+          end: _ccwAnimation.value + -(pi / 2.0),
         ).animate(CurvedAnimation(
           parent: _ccwAnimationController,
           curve: Curves.bounceOut,
@@ -71,8 +72,9 @@ class _ChainedAnimationWithClipperState
 
         _ccwAnimationController
           ..reset()
-          ..forward.delayed(const Duration(seconds: 1));
+          ..forward();
       }
+      print("flip status is $status");
     });
   }
 
@@ -93,58 +95,61 @@ class _ChainedAnimationWithClipperState
         ),
       );
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: _ccwAnimationController,
-        builder: (context, child) {
-          return Transform(
-            alignment: Alignment.center,
-            transform: Matrix4.identity()..rotateZ(_ccwAnimation.value),
-            child: Row(
-              children: [
-                AnimatedBuilder(
-                  animation: _flipAnimationController,
-                  builder: (context, child) {
-                    return Transform(
-                      alignment: Alignment.centerRight,
-                      transform: Matrix4.identity()
-                        ..rotateY(
-                          _flipAnimation.value,
+      body: SafeArea(
+        child: AnimatedBuilder(
+          animation: _ccwAnimationController,
+          builder: (context, child) {
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()..rotateZ(_ccwAnimation.value),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedBuilder(
+                    animation: _flipAnimationController,
+                    builder: (context, child) {
+                      return Transform(
+                        alignment: Alignment.centerRight,
+                        transform: Matrix4.identity()
+                          ..rotateY(
+                            _flipAnimation.value,
+                          ),
+                        child: ClipPath(
+                          clipper: HalfCirclerClipper(side: CircleSide.left),
+                          child: Container(
+                            color: const Color(0xff0057b7),
+                            width: 100,
+                            height: 100,
+                          ),
                         ),
-                      child: ClipPath(
-                        clipper: HalfCirclerClipper(side: CircleSide.left),
-                        child: Container(
-                          color: const Color(0xff0057b7),
-                          width: 100,
-                          height: 100,
+                      );
+                    },
+                  ),
+                  AnimatedBuilder(
+                    animation: _flipAnimation,
+                    builder: (context, child) {
+                      return Transform(
+                        alignment: Alignment.centerLeft,
+                        transform: Matrix4.identity()
+                          ..rotateY(
+                            _flipAnimation.value,
+                          ),
+                        child: ClipPath(
+                          clipper: HalfCirclerClipper(side: CircleSide.right),
+                          child: Container(
+                            color: const Color(0xffffd700),
+                            width: 100,
+                            height: 100,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                AnimatedBuilder(
-                  animation: _flipAnimationController,
-                  builder: (context, child) {
-                    return Transform(
-                      alignment: Alignment.centerLeft,
-                      transform: Matrix4.identity()
-                        ..rotateY(
-                          _flipAnimation.value,
-                        ),
-                      child: ClipPath(
-                        clipper: HalfCirclerClipper(side: CircleSide.right),
-                        child: Container(
-                          color: const Color(0xffffd700),
-                          width: 100,
-                          height: 100,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -183,7 +188,7 @@ extension ToPath on CircleSide {
 }
 
 extension on VoidCallback {
-  Future<void> delayed(Duration duration) => Future.delayed(duration);
+  Future<void> delayed(Duration duration) => Future.delayed(duration, this);
 }
 
 class HalfCirclerClipper extends CustomClipper<Path> {
