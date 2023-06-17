@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'animated_builder_transform/animated_builder.dart';
+import 'animations/animated_builder.dart';
 
 void main() {
   runApp(const MyApp());
